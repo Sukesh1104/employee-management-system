@@ -1,14 +1,26 @@
+
+# Use Maven and JDK 17
+FROM maven:3.9.6-eclipse-temurin-17 AS build
+
+WORKDIR /app
+
+# Copy project files
+COPY pom.xml .
+RUN mvn dependency:resolve
+
+COPY . .
+
+# Package the app
+RUN mvn clean package -DskipTests
+
+# Runtime image
 FROM eclipse-temurin:17-jdk
 
 WORKDIR /app
 
-COPY mvnw .
-COPY .mvn .mvn
-COPY pom.xml .
-RUN ./mvnw dependency:resolve
+COPY --from=build /app/target/employee-mysql-0.0.1-SNAPSHOT.jar app.jar
 
-COPY . .
+EXPOSE 8080
 
-RUN ./mvnw package -DskipTests
+CMD ["java", "-jar", "app.jar"]
 
-CMD ["java", "-jar", "target/employee-mysql-0.0.1-SNAPSHOT.jar"]
